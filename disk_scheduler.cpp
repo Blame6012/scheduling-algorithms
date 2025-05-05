@@ -62,20 +62,33 @@ int scan(vector<int> requests, int head, int cylinders, vector<int> &order, bool
   return seek;
 }
 
-int c_scan(vector<int> requests, int head, int cylinders, vector<int> &order)
+int c_scan(vector<int> requests, int head, int cylinders, vector<int> &order, bool direction_up = true)
 {
   int seek = 0;
   requests.push_back(head);
   sort(requests.begin(), requests.end());
   int index = find(requests.begin(), requests.end(), head) - requests.begin();
 
-  for (int i = index; i < requests.size(); ++i)
-    order.push_back(requests[i]);
-  if (order.back() != cylinders - 1)
+  if (direction_up)
+  {
+    for (int i = index; i < requests.size(); ++i)
+      order.push_back(requests[i]);
+    if (order.back() != cylinders - 1)
+      order.push_back(cylinders - 1);
+    order.push_back(0);
+    for (int i = 0; i < index; ++i)
+      order.push_back(requests[i]);
+  }
+  else
+  {
+    for (int i = index; i >= 0; --i)
+      order.push_back(requests[i]);
+    if (order.back() != 0)
+      order.push_back(0);
     order.push_back(cylinders - 1);
-  order.push_back(0);
-  for (int i = 0; i < index; ++i)
-    order.push_back(requests[i]);
+    for (int i = requests.size() - 1; i > index; --i)
+      order.push_back(requests[i]);
+  }
 
   int current = head;
   for (int pos : order)
@@ -92,7 +105,7 @@ int main()
   string algorithm;
   vector<int> requests;
 
-  cout << "\nDick Schedular CLI\n";
+  cout << "\nDisk Scheduler CLI\n";
   cout << "Enter number of cylinders: ";
   cin >> cylinders;
 
@@ -119,15 +132,24 @@ int main()
   cout << "Enter algorithm (FCFS / SCAN / C-SCAN): ";
   cin >> algorithm;
 
+  bool direction_up = true;
+  if (algorithm == "SCAN" || algorithm == "scan" || algorithm == "C-SCAN" || algorithm == "c-scan")
+  {
+    cout << "Enter initial direction (up/down): ";
+    string dir;
+    cin >> dir;
+    direction_up = (dir == "up");
+  }
+
   vector<int> seek_order;
   int total_seek = 0;
 
   if (algorithm == "FCFS" || algorithm == "fcfs")
     total_seek = fcfs(requests, initial_head, seek_order);
   else if (algorithm == "SCAN" || algorithm == "scan")
-    total_seek = scan(requests, initial_head, cylinders, seek_order, true);
+    total_seek = scan(requests, initial_head, cylinders, seek_order, direction_up);
   else if (algorithm == "C-SCAN" || algorithm == "c-scan")
-    total_seek = c_scan(requests, initial_head, cylinders, seek_order);
+    total_seek = c_scan(requests, initial_head, cylinders, seek_order, direction_up);
   else
   {
     cout << "Invalid algorithm name." << endl;
